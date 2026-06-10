@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Calendario de Estado de Tareas - Teams</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f4f7fc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal con estilo Teams */
+        .calendar-card {
+            max-width: 1300px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* Encabezado Teams-like */
+        .teams-header {
+            background: #6264A7;
+            padding: 1.2rem 2rem;
+            color: white;
+        }
+
+        .teams-header h1 {
+            margin: 0;
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .teams-header h1 span {
+            font-size: 1.9rem;
+        }
+
+        .teams-header p {
+            margin: 8px 0 0;
+            opacity: 0.85;
+            font-size: 0.9rem;
+        }
+
+        /* Panel de controles */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            background: #ffffff;
+            border-bottom: 1px solid #e1e5ea;
+            gap: 15px;
+        }
+
+        .month-year {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f0f2f5;
+            padding: 5px 12px;
+            border-radius: 60px;
+        }
+
+        .month-year button {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 40px;
+            transition: all 0.2s;
+            color: #2c2e3a;
+            font-weight: bold;
+        }
+
+        .month-year button:hover {
+            background: #e0e3e9;
+        }
+
+        .month-year h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            min-width: 200px;
+            text-align: center;
+            color: #1f1f2e;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: #f9fafb;
+            padding: 8px 18px;
+            border-radius: 40px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 40px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .legend-item span:first-child {
+            font-size: 1.2rem;
+        }
+
+        /* botón reset */
+        .reset-btn {
+            background: #eef2ff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #2c3e66;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reset-btn:hover {
+            background: #dce2fc;
+        }
+
+        /* Tabla del calendario */
+        .calendar-wrapper {
+            padding: 0 20px 20px 20px;
+            overflow-x: auto;
+        }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        .calendar-table th {
+            background: #f3f4f8;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 8px;
+            color: #464775;
+            border-bottom: 1px solid #e2e6ec;
+        }
+
+        .calendar-table td {
+            border: 1px solid #edf0f5;
+            text-align: center;
+            vertical-align: top;
+            padding: 10px 6px;
+            background-color: #ffffff;
+            transition: 0.05s linear;
+            height: 105px;
+            width: 14%;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: block;
+            text-align: right;
+            margin-bottom: 12px;
+            color: #3a3c4a;
+        }
+
+        .other-month {
+            background-color: #fefefe;
+            color: #a0a3b9;
+        }
+        .other-month .day-number {
+            color: #bbbfd4;
+        }
+
+        /* Emoji estados interactivos */
+        .state-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .state-emoji {
+            font-size: 1.7rem;
+            cursor: pointer;
+            transition: transform 0.1s ease, filter 0.1s;
+            padding: 4px;
+            border-radius: 50px;
+            background: transparent;
+            opacity: 0.75;
+        }
+
+        .state-emoji:hover {
+            transform: scale(1.2);
+            background: #f0f2f9;
+            opacity: 1;
+        }
+
+        .active-state {
+            background: #eef2ff;
+            border-radius: 40px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 1;
+        }
+
+        /* estado mostrado */
+        .current-state {
+            font-size: 1.55rem;
+            margin-top: 8px;
+            display: inline-block;
+            background: #f9fafc;
+            padding: 4px 12px;
+            border-radius: 50px;
+            width: auto;
+            text-align: center;
+        }
+
+        .cell-state-indicator {
+            margin-top: 8px;
+            font-size: 1.9rem;
+            line-height: 1.3;
+        }
+
+        /* mensaje hover */
+        .state-emoji[title] {
+            cursor: pointer;
+        }
+
+        footer {
+            background: #f8f9fe;
+            padding: 14px 24px;
+            font-size: 0.75rem;
+            color: #6b6f8c;
+            text-align: center;
+            border-top: 1px solid #eaeef5;
+        }
+
+        @media (max-width: 700px) {
+            .state-buttons {
+                gap: 4px;
+            }
+            .state-emoji {
+                font-size: 1.3rem;
+            }
+            .calendar-table td {
+                padding: 6px 2px;
+                height: 85px;
+            }
+            .legend-item {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="calendar-card">
+    <div class="teams-header">
+        <h1>
+            <span>📅</span> Calendario de equipo · Estado con emojis
+        </h1>
+        <p>🔒 CERRADO &nbsp;&nbsp;|&nbsp;&nbsp; ⏳ PENDIENTE &nbsp;&nbsp;|&nbsp;&nbsp; ✅ COMPLETADO &nbsp;&nbsp;— haz clic en los emojis para cambiar estado</p>
+    </div>
+
+    <div class="controls">
+        <div class="month-year">
+            <button id="prevMonthBtn" aria-label="Mes anterior">◀</button>
+            <h2 id="monthYearDisplay">Enero 2025</h2>
+            <button id="nextMonthBtn" aria-label="Mes siguiente">▶</button>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><span>🔒</span> Cerrado</div>
+            <div class="legend-item"><span>⏳</span> Pendiente</div>
+            <div class="legend-item"><span>✅</span> Completado</div>
+            <div class="legend-item"><span>⚪</span> Sin definir</div>
+        </div>
+        <button id="resetAllBtn" class="reset-btn">🔄 Resetear todos los estados</button>
+    </div>
+
+    <div class="calendar-wrapper">
+        <table class="calendar-table" id="calendarTable">
+            <thead>
+                <tr>
+                    <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th>
+                </tr>
+            </thead>
+            <tbody id="calendarBody">
+                <!-- Las filas se llenan con JS -->
+            </tbody>
+        </table>
+    </div>
+    <footer>
+        💡 Consejo: haz clic en 🔒/⏳/✅ para cada día. Los estados se guardan automáticamente en tu navegador (localStorage).
+        Al añadir esta pestaña en Teams, cada miembro ve su propio estado si usan el mismo equipo/distinto navegador.
+    </footer>
+</div>
+
+<script>
+    // ---------- ESTADOS POSIBLES ----------
+    const STATES = {
+        CLOSED: { emoji: "🔒", label: "Cerrado" },
+        PENDING: { emoji: "⏳", label: "Pendiente" },
+        COMPLETED: { emoji: "✅", label: "Completado" },
+        NONE: { emoji: "⚪", label: "Sin definir" }
+    };
+
+    // Mapa de estados por clave "YYYY-MM-DD"
+    let statesMap = new Map();
+
+    // Fecha actual para visualización
+    let currentDisplayDate = new Date(); // mes/año mostrado
+    let today = new Date();
+
+    // Referencias DOM
+    const monthYearDisplay = document.getElementById("monthYearDisplay");
+    const calendarBody = document.getElementById("calendarBody");
+    const prevBtn = document.getElementById("prevMonthBtn");
+    const nextBtn = document.getElementById("nextMonthBtn");
+    const resetAllBtn = document.getElementById("resetAllBtn");
+
+    // ---------- Cargar desde localStorage ----------
+    function loadFromLocalStorage() {
+        const stored = localStorage.getItem("teamCalendarStates");
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                statesMap = new Map(Object.entries(parsed));
+            } catch(e) { console.warn(e); }
+        }
+        // Si no hay datos, se inicializa vacío (todos sin definir)
+    }
+
+    // Guardar en localStorage
+    function saveToLocalStorage() {
+        const obj = Object.fromEntries(statesMap);
+        localStorage.setItem("teamCalendarStates", JSON.stringify(obj));
+    }
+
+    // Obtener clave de día: YYYY-MM-DD
+    function getDateKey(year, month, day) {
+        return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+
+    // Obtener estado actual de un día (retorna objeto STATE)
+    function getStateForDate(key) {
+        const value = statesMap.get(key);
+        if (value === "CLOSED") return STATES.CLOSED;
+        if (value === "PENDING") return STATES.PENDING;
+        if (value === "COMPLETED") return STATES.COMPLETED;
+        return STATES.NONE;
+    }
+
+    // Setear estado para un día
+    function setStateForDate(key, stateId) {
+        if (stateId === "NONE") {
+            statesMap.delete(key);
+        } else {
+            statesMap.set(key, stateId);
+        }
+        saveToLocalStorage();
+        renderCalendar(); // refrescar vista
+    }
+
+    // ---------- Lógica para cambiar estado al hacer clic en emoji ----------
+    function handleStateClick(dateKey, clickedStateId) {
+        const current = getStateForDate(dateKey);
+        let newStateId = null;
+        // Ciclo lógico: si haces clic en el mismo estado? mejor: asignar el estado clickeado directamente.
+        // Para UX: Al hacer clic en un botón emoji, se asigna ESE estado (si ya está, se pasa a NONE? pero aquí lo dejamos asignación directa)
+        // Para mejor usabilidad: si haces clic en el emoji activo, se borra (NONE). Sino se pone ese estado.
+        // Esto es más intuitivo.
+        if (current.emoji === STATES[clickedStateId].emoji && current.label !== "Sin definir") {
+            // Si ya tiene ese estado, lo removemos (pasar a NONE)
+            setStateForDate(dateKey, "NONE");
+        } else {
+            setStateForDate(dateKey, clickedStateId);
+        }
+    }
+
+    // ---------- Renderizar el calendario completo ----------
+    function renderCalendar() {
+        const year = currentDisplayDate.getFullYear();
+        const month = currentDisplayDate.getMonth();
+
+        // Primer día del mes (0=lunes, adaptar: getDay() domingo=0, queremos lunes primero)
+        let firstDayOfMonth = new Date(year, month, 1);
+        let startWeekday = firstDayOfMonth.getDay(); // 0 domingo, 1 lunes...6 sábado
+        // Ajuste para que la semana comience en Lunes (Teams suele mostrar Lun-Dom)
+        // Si domingo=0 lo convertimos a 6 (para que lunes sea 0)
+        let startOffset = (startWeekday === 0) ? 6 : startWeekday - 1;
+        
+        // Último día del mes
+        const lastDateOfMonth = new Date(year, month + 1, 0).getDate();
+        
+        // días del mes previo para rellenar
+        const prevMonthLastDate = new Date(year, month, 0).getDate();
+        
+        let calendarRows = [];
+        let days = [];
+        
+        // Llenar días del mes anterior
+        for (let i = startOffset - 1; i >= 0; i--) {
+            const prevDay = prevMonthLastDate - i;
+            const prevYear = (month === 0) ? year - 1 : year;
+            const prevMonth = (month === 0) ? 11 : month - 1;
+            days.push({ year: prevYear, month: prevMonth, day: prevDay, isCurrentMonth: false });
+        }
+        
+        // días del mes actual
+        for (let d = 1; d <= lastDateOfMonth; d++) {
+            days.push({ year: year, month: month, day: d, isCurrentMonth: true });
+        }
+        
+        // días del mes siguiente para completar 42 (6 filas * 7)
+        const remainingCells = 42 - days.length;
+        for (let i = 1; i <= remainingCells; i++) {
+            const nextYear = (month === 11) ? year + 1 : year;
+            const nextMonth = (month === 11) ? 0 : month + 1;
+            days.push({ year: nextYear, month: nextMonth, day: i, isCurrentMonth: false });
+        }
+        
+        // Construir filas (7 celdas por fila)
+        for (let i = 0; i < days.length; i += 7) {
+            const weekSlice = days.slice(i, i+7);
+            const row = document.createElement("tr");
+            
+            weekSlice.forEach(dayInfo => {
+                const td = document.createElement("td");
+                const { year: y, month: m, day: d, isCurrentMonth } = dayInfo;
+                const dateKey = getDateKey(y, m, d);
+                const state = getStateForDate(dateKey);
+                
+                // Agregar clase si es otro mes
+                if (!isCurrentMonth) {
+                    td.classList.add("other-month");
+                }
+                
+                // Número del día
+                const dayNumberSpan = document.createElement("div");
+                dayNumberSpan.className = "day-number";
+                dayNumberSpan.textContent = d;
+                td.appendChild(dayNumberSpan);
+                
+                // Contenedor de estado actual (muestra emoji grande)
+                const stateDisplayDiv = document.createElement("div");
+                stateDisplayDiv.className = "cell-state-indicator";
+                stateDisplayDiv.textContent = state.emoji;
+                stateDisplayDiv.style.fontSize = "1.9rem";
+                stateDisplayDiv.style.textAlign = "center";
+                td.appendChild(stateDisplayDiv);
+                
+                // Botones interactivos con emojis: 🔒 ⏳ ✅
+                const btnContainer = document.createElement("div");
+                btnContainer.className = "state-buttons";
+                
+                // Función para crear botón emoji
+                const createEmojiBtn = (stateId, emojiChar, tooltip) => {
+                    const btn = document.createElement("span");
+                    btn.className = "state-emoji";
+                    btn.textContent = emojiChar;
+                    btn.title = tooltip;
+                    if (state.emoji === emojiChar && state.label !== "Sin definir") {
+                        btn.classList.add("active-state");
+                    }
+                    btn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        handleStateClick(dateKey, stateId);
+                    });
+                    return btn;
+                };
+                
+                const closedBtn = createEmojiBtn("CLOSED", "🔒", "Marcar como Cerrado");
+                const pendingBtn = createEmojiBtn("PENDING", "⏳", "Marcar como Pendiente");
+                const completedBtn = createEmojiBtn("COMPLETED", "✅", "Marcar como Completado");
+                // Botón adicional para limpiar? pero con clic en activo se borra. Puede agregarse "⚪" rápido?
+                const clearBtn = document.createElement("span");
+                clearBtn.className = "state-emoji";
+                clearBtn.textContent = "⚪";
+                clearBtn.title = "Quitar estado / Sin definir";
+                clearBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    setStateForDate(dateKey, "NONE");
+                });
+                if (state.label === "Sin definir") clearBtn.classList.add("active-state");
+                
+                btnContainer.appendChild(closedBtn);
+                btnContainer.appendChild(pendingBtn);
+                btnContainer.appendChild(completedBtn);
+                btnContainer.appendChild(clearBtn);
+                
+                td.appendChild(btnContainer);
+                row.appendChild(td);
+            });
+            calendarRows.push(row);
+        }
+        
+        // Limpiar y adjuntar nuevas filas
+        calendarBody.innerHTML = "";
+        calendarRows.forEach(row => calendarBody.appendChild(row));
+        
+        // Actualizar título del mes/año
+        const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        monthYearDisplay.textContent = `${monthNames[month]} ${year}`;
+    }
+    
+    // Cambiar mes
+    function changeMonth(delta) {
+        let newDate = new Date(currentDisplayDate.getFullYear(), currentDisplayDate.getMonth() + delta, 1);
+        currentDisplayDate = newDate;
+        renderCalendar();
+    }
+    
+    // Resetear todos los estados (borrar todo el mapa)
+    function resetAllStates() {
+        if (confirm("¿Resetear TODOS los estados del calendario? Esta acción borrará 🔒, ⏳, ✅ para todas las fechas.")) {
+            statesMap.clear();
+            saveToLocalStorage();
+            renderCalendar();
+        }
+    }
+    
+    // Inicialización: eventos
+    function init() {
+        loadFromLocalStorage();
+        renderCalendar();
+        prevBtn.addEventListener("click", () => changeMonth(-1));
+        nextBtn.addEventListener("click", () => changeMonth(1));
+        resetAllBtn.addEventListener("click", resetAllStates);
+    }
+    
+    init();
+</script>
+</body>
+</html>
